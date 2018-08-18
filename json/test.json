@@ -1,0 +1,38 @@
+{
+  "prêts": {
+    "pret1": {
+      "nom": "membre1",
+      "montant": "1000.50",
+      "date": "12.08.2017"
+    },
+    "pret2": {
+      "nom": "membre2",
+      "montant": "1000.50",
+      "date": "12.08.2017"
+    }
+  }, 
+  "remboursements": {
+    "remboursement1": {
+      "nom": "membre1",
+      "montant": "1000.50",
+      "date": "12.08.2017"
+    },
+    "remboursement2": {
+      "nom": "membre2",
+      "montant": "1000.50",
+      "date": "12.08.2017"
+    }
+  },
+  "investissement": {
+    "investissement1": {
+      "nom": "membre1",
+      "montant": "1000.50",
+      "date": "12.08.2017"
+    },
+    "investissement2": {
+      "nom": "membre2",
+      "montant": "1000.50",
+      "date": "12.08.2017"
+    }
+  }
+}
