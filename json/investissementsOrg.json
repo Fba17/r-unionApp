@@ -1,4 +1,4 @@
-{"Investissements":[
+{
    {"id":"1",
       "investisseur": "Fond de caisse",
       "date": "24.03.2018",
@@ -44,5 +44,4 @@
       "date": "04.08.2018",
       "montant": 500
     }
-  
-  ]}
+}
