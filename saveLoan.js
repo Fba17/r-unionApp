@@ -17,7 +17,7 @@ request.onload = function() {
     grpId = grpId + 1
     listGrpInvestment.push({
       id: grpId,
-      date: currentDate,
+      date: new Date(currentDate),
       montant: lisInvestment.filter(x => x.date === currentDate).reduce(reducer, 0)
     })
     listInvestisseurPerDate.push({
@@ -31,6 +31,28 @@ request.onload = function() {
        })
     })
   }
+  var guiInput = {
+    prêteur: "Boris" ,
+    date:"2018.03.24" ,
+    montant: 1000
+  }
+  var datePret = new Date(guiInput.date);
+  var montantPret = guiInput.montant;
+  var gpr = 0
+  var consideredGrp = listGrpInvestment.filter(x => x.date <= datePret)
+  while(montantPret > 0 && consideredGrp[gpr]) {
+    var actGrpe = consideredGrp[gpr]
+    var montantGrpe = actGrpe.montant;
+    if(montantGrpe >= montantPret)
+    {
+      montantPret = 0;
+      montantGrpe = montantGrpe - montantPret
+    }
+    else{
+    	montantPret = montantPret - montantGrpe  
+    }
+  }
+  console.log(new Date(guiInput.date))
   console.log(listGrpInvestment)
-  console.log(listInvestisseurPerDate[0].investisseurs[0].investisseur)
+  console.log(listInvestisseurPerDate)
 }
