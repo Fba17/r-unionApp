@@ -8,22 +8,24 @@ request.onload = function() {
   var listGrpInvestment = [];
   const reducer = (accumulator, currentValue) => accumulator + currentValue.montant ; 
   var distinctDates = [...new Set( lisInvestment.map(x => x.date))]
-  var listInvestisseurPerDate = [];
+  var listGrpeInvestorPerDate = [];
   var grpId = 0;
   for(let currentDate of distinctDates) {
     grpId = grpId + 1
+	var montantGrp = lisInvestment.filter(x => x.date === currentDate).reduce(reducer, 0)
     listGrpInvestment.push({
       id: grpId,
       date: new Date(currentDate),
-      montant: lisInvestment.filter(x => x.date === currentDate).reduce(reducer, 0)
+      montant: montantGrp
     })
-    listInvestisseurPerDate.push({
+   listGrpeInvestorPerDate.push({
       id: grpId,
       investisseurs: lisInvestment.filter(x => x.date === currentDate).map(x => 
        {
         var membre = {};
         membre["idInvestisseur"] = x.id;
         membre["montant"] = x.montant;
+		membre["percent"] = x.montant/montantGrp
         return membre;
        })
     })
@@ -68,37 +70,45 @@ request.onload = function() {
     }
     gpr = gpr +1;
   }
-  var pretObj = {
+
+  var loanInvestor = []
+ // change les investissement.
+  console.log(lisInvestment)
+  //var listOfInvestor = pretObj.listOfInvestor
+  for (let investor of listLoanInvestor){
+   var investors = listGrpeInvestorPerDate.filter(x => x.id === investor.id )
+   var ivestisseurObj = investors.map(y => y.investisseurs.map(x => {
+	   var membreWithPercent = {}
+	   membreWithPercent["idInvest"] = x.idInvestisseur;
+	   membreWithPercent["percent"] = x.percent;
+     return membreWithPercent;
+   }))[0]
+   var ivestisseurIds = ivestisseurObj.map(y => y.idInvest)
+   lisInvestment = lisInvestment.map(function(invest){
+     var result= {}
+     if(ivestisseurIds.includes(invest.id)){
+	   var percentAretirer = ivestisseurObj.filter(y => y.idInvest === invest.id)[0].percent
+       result["id"] = invest.id;
+       result["investisseur"] = invest.investisseur;
+       result["date"] = invest.date;
+       result["montant"] = invest.montant - investor.montantEmprunte*percentAretirer ;
+       loanInvestor.push({
+         investorId: invest.id,
+         amount: investor.montantEmprunte*percentAretirer
+       })
+     }
+     else{
+       result = invest
+     }
+     return result;
+     })
+  }
+  console.log(lisInvestment)
+    var pretObj = {
     id:guiInput.id,
     date:guiInput.date,
     montant:guiInput.montant,
-    listOfInvestor:listLoanInvestor
+    listOfInvestor:loanInvestor
   }
-  console.log(lisInvestment)
-  console.log(listInvestisseurPerDate)
-  console.log(pretObj)
-  // change les investissement.
-  
-  var listOfInvestor = pretObj.listOfInvestor
-  var mutedInvestorsList = []
-  for (let investor of listOfInvestor){
-   var investors = listInvestisseurPerDate.filter(x => x.id == investor.id )
-   var investisseurLoan = investors.investisseurs
-   var ivestisseurIds = investisseurLoan.map(x => x.idInvestisseur)
-   var montantAretirer = investor.montantEmprunte / investisseurLoan.length
-    for (let invest of lisInvestment){
-      if (ivestisseurIds.includes(invest.id)){
-        mutedInvestorsList.push({
-          id:invest.id,
-          investisseur: invest.investisseur,
-          date: invest.date,
-          montant: invest.montant - montantAretirer 
-        })
-      }
-      else{
-        mutedInvestorsList.push(invest)
-      }
-    }
-  }
-    
+   console.log(pretObj)
 }
