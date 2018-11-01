@@ -110,5 +110,5 @@ request.onload = function() {
     montant:guiInput.montant,
     listOfInvestor:loanInvestor
   }
-   console.log(pretObj)
+   console.log(JSON.stringify(pretObj))
 }
