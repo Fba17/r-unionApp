@@ -1,60 +1,58 @@
-var refund = {
-	date:"2018.03.27" ,
-	amount: 5000,
-	id: 1
-}
+function saveRefund(loanId, date, amount) {
+	var refund = {
+		date,
+		amount,
+		id: loanId
+	}
+	var requestURLLoans = 'https://africorp.github.io/appreunion/json/pretsOrg.json';
+	var requestLoans = new XMLHttpRequest();
+	requestLoans.open('GET', requestURLLoans);
+	requestLoans.responseType = 'json';
+	requestLoans.send();
 
-var requestURLLoans = 'https://africorp.github.io/appreunion/json/pretsOrg.json';
-var requestLoans = new XMLHttpRequest();
+	requestLoans.onload = function() {
+		var loans = requestLoans.response;
+		modifyInvestments(findInvestorsAndModifyTheirAmount(loans));
+	}
 
-requestLoans.open('GET', requestURLLoans);
-requestLoans.responseType = 'json';
-requestLoans.send();
+	function findInvestorsAndModifyTheirAmount(listLoans) {
+		var loan = listLoans.filter(x => x.id === refund.id)[0]
+		var result = loan.listOfInvestor.map(function(investor) {
+			var percent = investor.amount/loan.montant
+			var investorModified = {
+				id: investor.investorId,
+				amount: percent*refund.amount
+			}
+			return investorModified;
+		})
+		return result;
+	}
 
-requestLoans.onload = function() {
-	var loans = requestLoans.response;
-	modifyInvestments(findInvestorsAndModifyAmount(loans));
-}
-
-function findInvestorsAndModifyTheirAmount (listLoans) {
-	var loan = listLoans.filter(x => loan.id === refund.id)[0]
-	var result = loan.listOfInvestor.map(function(investor) {
-		var percent = investor.amount/loan.montant
-		var investorModified = {
-			id: investor.id,
-			amount: percent*refund.amount
-		}
-		return investorModified;
-	})
-	return result;
-}
-
-function modifyInvestments(listOfInvestorsWithModifiedAmounts) {
-	var requestURLInvestments = 'https://africorp.github.io/appreunion/json/investissementsOrg.json';
-	var requestInvestments = new XMLHttpRequest();
-
-	requestInvestments.open('GET', requestURLInvestments);
-	requestInvestments.responseType = 'json';
-	requestInvestments.send();
-
-	requestInvestments.onload = function() {
-		var investments = requestInvestments.response;
+	function modifyInvestments(listOfInvestorsWithModifiedAmounts) {
+		var requestURLInvestments = 'https://africorp.github.io/appreunion/json/investissementsOrg.json';
+		var requestInvestments = new XMLHttpRequest();
 		
-		for(let item of listOfInvestorsWithModifiedAmounts) {
-			investments = investments.map(function(investment) {
-				if(investment.id === item.id) {
-					return {
-						id: investment.id,
-						investisseur: investment.investisseur,
-						date: investment.date,
-						montant: investment.montant + item.amount
+		requestInvestments.open('GET', requestURLInvestments);
+		requestInvestments.responseType = 'json';
+		requestInvestments.send();
+		requestInvestments.onload = function() {
+		   var investments = requestInvestments.response;
+		   console.log(investments)
+			for(let item of listOfInvestorsWithModifiedAmounts) {
+				investments = investments.map(function(investment) {
+					if(investment.id === item.id) {
+						return {
+							id: investment.id,
+							investisseur: investment.investisseur,
+							date: investment.date,
+							montant: investment.montant + item.amount
+						}
 					}
-				}
-				else
-					return investment
-			})
+					else
+						return investment
+				})
+			}
+			console.log(investments);
 		}
-		
-		console.log(investments);
 	}
 }
