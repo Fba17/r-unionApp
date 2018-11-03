@@ -36,29 +36,31 @@ loanRequest.onload = function() {
 		investRequest.send(); 
 		investRequest.onload = function() {
 			listInvestmentsOriginal = investRequest.response
+            listInvestmentsMutable = listInvestmentsOriginal
 			// loop the concatresult
 			for(let elt of listOfLoanAndRefund){
 				if(elt.type === "P"){
-					createLoanAndUpdateInvestment(elt, listInvestmentsOriginal)
+					createLoanAndUpdateInvestment(elt)
 				}
 				else{
-                    var result = findInvestorsAndModifyTheirAmount(listOfLoans, elt)
-					modifylistInvestmentsMutable(result, listInvestmentsMutable)
+                    var result = findInvestorsAndModifyTheirAmount(elt)
+					modifylistInvestmentsMutable(result)
 				}
 			}
-			calculInterest(listInvestmentsOriginal , listInvestmentsMutable)
+			calculInterest(listInvestmentsOriginal)
+            
 		}
 	}
 }
 
-function createGroupeInvestment(listInvestmentsOriginal) {
+function createGroupeInvestment() {
 	var listGrpInvestment = [];
 	const reducer = (accumulator, currentValue) => accumulator + currentValue.montant ; 
-	var distinctDates = [...new Set( listInvestmentsOriginal.map(x => x.date))]
+	var distinctDates = [...new Set( listInvestmentsMutable.map(x => x.date))]
 	var grpId = 0;
 	for(let currentDate of distinctDates) {
 		grpId = grpId + 1
-		var montantGrp = listInvestmentsOriginal.filter(x => x.date === currentDate).reduce(reducer, 0)
+		var montantGrp = listInvestmentsMutable.filter(x => x.date === currentDate).reduce(reducer, 0)
 		listGrpInvestment.push({
 			id: grpId,
 			date: new Date(currentDate),
@@ -68,17 +70,17 @@ function createGroupeInvestment(listInvestmentsOriginal) {
 	return listGrpInvestment
 }
 
-function matchInvestorToGroupe(listInvestmentsOriginal) {
-	var distinctDates = [...new Set( listInvestmentsOriginal.map(x => x.date))]
+function matchInvestorToGroupe() {
+	var distinctDates = [...new Set( listInvestmentsMutable.map(x => x.date))]
 	var listGrpeInvestorPerDate = [];
 	const reducer = (accumulator, currentValue) => accumulator + currentValue.montant ; 
 	var grpId = 0;
 	for(let currentDate of distinctDates) {
 		grpId = grpId + 1
-		var montantGrp = listInvestmentsOriginal.filter(x => x.date === currentDate).reduce(reducer, 0)
+		var montantGrp = listInvestmentsMutable.filter(x => x.date === currentDate).reduce(reducer, 0)
 		listGrpeInvestorPerDate.push({
 			id: grpId,
-			investisseurs: listInvestmentsOriginal.filter(x => x.date === currentDate).map(x => 
+			investisseurs: listInvestmentsMutable.filter(x => x.date === currentDate).map(x => 
 			{
 			var membre = {};
 			membre["idInvestisseur"] = x.id;
@@ -91,9 +93,9 @@ function matchInvestorToGroupe(listInvestmentsOriginal) {
 	return listGrpeInvestorPerDate;
 }
 
-function createLoanAndUpdateInvestment(loan, listInvestmentsOriginal) {
-	var listGrpInvestment = createGroupeInvestment(listInvestmentsOriginal)
-	var listGrpeInvestorPerDate = matchInvestorToGroupe(listInvestmentsOriginal) 
+function createLoanAndUpdateInvestment(loan) {
+	var listGrpInvestment = createGroupeInvestment()
+	var listGrpeInvestorPerDate = matchInvestorToGroupe() 
 	var datePret = new Date(loan.date);
 	var montantPret = loan.montant;
 	var gpr = 0
@@ -115,6 +117,7 @@ function createLoanAndUpdateInvestment(loan, listInvestmentsOriginal) {
 		  montantPretVar = 0;
 		}
 		else{
+           if(montantGrpe > 0){
 			var percentage = montantGrpe / montantPret;
 			listGrpeInvestor.push({
 			  id:actGrpe.id,
@@ -122,10 +125,10 @@ function createLoanAndUpdateInvestment(loan, listInvestmentsOriginal) {
 			  percentage: percentage
 			})
 			montantPretVar = montantPretVar - montantGrpe;
+           }
 		}
 		gpr = gpr +1;
 	}
-
 	var loanInvestors = []
 	// change les investissement.
 	//var listOfInvestor = pretObj.listOfInvestor
@@ -138,7 +141,7 @@ function createLoanAndUpdateInvestment(loan, listInvestmentsOriginal) {
 	 return membreWithPercent;
 	}))[0]
 	var ivestisseurIds = ivestisseurObj.map(y => y.idInvest)
-	listInvestmentsMutable = listInvestmentsOriginal.map(function(invest){
+	listInvestmentsMutable = listInvestmentsMutable.map(function(invest){
 	 var result= {}
 	 if(ivestisseurIds.includes(invest.id)){
 	   var percentAretirer = ivestisseurObj.filter(y => y.idInvest === invest.id)[0].percent
@@ -169,8 +172,8 @@ function createLoanAndUpdateInvestment(loan, listInvestmentsOriginal) {
 	listOfLoans.push(pretObj)
 }
 
-function findInvestorsAndModifyTheirAmount(listLoans, refund) {
-var loan = listLoans.filter(x => x.id === refund.id)[0]
+function findInvestorsAndModifyTheirAmount(refund) {
+var loan = listOfLoans.filter(x => x.id === refund.id)[0]
 var result = loan.listOfInvestor.map(function(investor) {
 	var percent = investor.amount/loan.montant
 	var investorModified = {
@@ -182,7 +185,7 @@ var result = loan.listOfInvestor.map(function(investor) {
 return result;
 }
 
-function modifylistInvestmentsMutable(listOfInvestorsWithModifiedAmounts, listInvestmentsMutable) {
+function modifylistInvestmentsMutable(listOfInvestorsWithModifiedAmounts) {
 for(let item of listOfInvestorsWithModifiedAmounts) {
 	listInvestmentsMutable = listInvestmentsMutable.map(function(investment) {
 		if(investment.id === item.id) {
@@ -199,7 +202,7 @@ for(let item of listOfInvestorsWithModifiedAmounts) {
 }
 }
 
-function calculInterest(listInvestmentsOriginal , listInvestmentsMutable) {
+function calculInterest(listInvestmentsOriginal) {
 	var setOfInvestor = [...new Set( listInvestmentsOriginal.map(x => x.investisseur))]
 	const reducer = (accumulator, currentValue) => accumulator + currentValue.montant ; 
 	var listInterest = [];
@@ -213,5 +216,5 @@ function calculInterest(listInvestmentsOriginal , listInvestmentsMutable) {
 			interetGenere: montantTotalgenere - montantTotalInvesti
 		})
 	}
-	console.log(listInterest);
+	console.log(JSON.stringify(listInterest));
 }
