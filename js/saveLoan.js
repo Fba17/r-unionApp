@@ -5,6 +5,7 @@ function saveLoan(name, date, amount) {
 		montant: amount,
 		id: (name.concat(date.replace(/(\.)/g, ''))).replace(/\s/g, '')
 	}
+	//TODO refer to caculInterest. There is a hint concerning this point
 	var requestURL = 'https://africorp.github.io/appreunion/json/investissementsOrg.json';
 	var request = new XMLHttpRequest();
 	request.open('GET', requestURL);
@@ -17,14 +18,17 @@ function saveLoan(name, date, amount) {
 	  var distinctDates = [...new Set( lisInvestment.map(x => x.date))]
 	  var listGrpeInvestorPerDate = [];
 	  var grpId = 0;
+	  //TODO review the logic here. Why we use 2 lists
 	  for(let currentDate of distinctDates) {
 		grpId = grpId + 1
+		// create groupe of investors according to the date of investment
 		var montantGrp = lisInvestment.filter(x => x.date === currentDate).reduce(reducer, 0)
 		listGrpInvestment.push({
 		  id: grpId,
 		  date: new Date(currentDate),
 		  montant: montantGrp
 		})
+		// Create a Map of GroupeID and Membre of this group.
 	   listGrpeInvestorPerDate.push({
 		  id: grpId,
 		  investisseurs: lisInvestment.filter(x => x.date === currentDate).map(x => 
@@ -37,6 +41,8 @@ function saveLoan(name, date, amount) {
 		   })
 		})
 	  }
+	  // Search for all the investor, which participate to the loan and update the investment group amount
+	  //listLoanInvestor list of investors, which was involve in the Loan
 	  var datePret = new Date(guiInput.date);
 	  var montantPret = guiInput.montant;
 	  var gpr = 0
@@ -73,7 +79,6 @@ function saveLoan(name, date, amount) {
 
 	  var loanInvestor = []
 	 // change les investissement.
-	  console.log(lisInvestment)
 	  //var listOfInvestor = pretObj.listOfInvestor
 	  for (let investor of listLoanInvestor){
 	   var investors = listGrpeInvestorPerDate.filter(x => x.id === investor.id )
